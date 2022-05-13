@@ -10,6 +10,7 @@ search_vk_post.txt
 Selen_pars.py
 BOTapi.py
 search_vk_post
+pars_VK
 
 # Created by https://www.gitignore.io
 
@@ -106,4 +107,5 @@ db.sqlite3
 .venv/
 
 My-projects-duan-
-vk_prs.py
+/vk_prs.py
+PARSING
