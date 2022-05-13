@@ -3,6 +3,7 @@ import config
 from telebot import types
 import random
 from PARSING.vk_prs import ParsVk
+from io import BytesIO
 
 bot = telebot.TeleBot(config.Token)
 
@@ -50,18 +51,25 @@ def dialog(message):
     if message.text == 'Help!':
         bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
         choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
-        bot.register_next_step_handler(choice)
 
     if message.text == 'go':
         url = bot.send_message(message.chat.id, "Кидай ссылку, челик")
         bot.register_next_step_handler(url, parsing)
 
 
+@bot.message_handler(content_types=['document'])
 def parsing(message):
     chat_parser = ParsVk(message.text)
-    chat_parser_id = chat_parser.pars_id()
-    bot.send_message(message.chat.id, f'{chat_parser_id}')
-    return list_id.append(chat_parser_id)
+    chat_parser_id_open = chat_parser.create_a_open_list
+    chat_parser_id_close = chat_parser.create_a_close_list
+    # bot.send_message(message.chat.id, f'Открытые акки:')
+    # bot.send_document(message.chat.id, chat_parser_id_close)
+
+    bot.send_message(message.chat.id, f'Закрытые акки:')
+    with open(r'E:\Project1\BOTS\Close.txt', 'w') as file:
+        for elements in chat_parser_id_close:
+            file.write(str(elements) + '\n')
+        bot.send_document(message.chat.id, file)
 
 
 def answer_q(message):
