@@ -25,7 +25,7 @@ stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur
 
 helper = {'helping': ',я могу показать Вам актуальные данные по валюте.'}
 
-list_id = []
+list_id = ('count\n')
 
 
 @bot.message_handler(commands=['start'])
@@ -57,7 +57,7 @@ def dialog(message):
         bot.register_next_step_handler(url, parsing)
 
 
-@bot.message_handler(content_types=['document'])
+@bot.message_handler(content_types=['document', 'text'])
 def parsing(message):
     chat_parser = ParsVk(message.text)
     chat_parser_id_open = chat_parser.create_a_open_list
@@ -66,10 +66,13 @@ def parsing(message):
     # bot.send_document(message.chat.id, chat_parser_id_close)
 
     bot.send_message(message.chat.id, f'Закрытые акки:')
-    with open(r'E:\Project1\BOTS\Close.txt', 'w') as file:
-        for elements in chat_parser_id_close:
-            file.write(str(elements) + '\n')
-        bot.send_document(message.chat.id, file)
+    # if len(chat_parser_id_close) > 4096:
+    #     for x in range(0, len(chat_parser_id_close), 4096):
+    #         bot.send_message(message.chat.id, chat_parser_id_close[x:x + 4096])
+    # else:
+    bot.send_message(message.chat.id, chat_parser_id_close)
+
+    print(chat_parser_id_close)
 
 
 def answer_q(message):

@@ -22,6 +22,7 @@ class ParsVk:
     def create_a_close_list(self):
         a = ParsVk.req_url(self)
         close_list = []
+
         for i in a['items']:
             b = i['is_closed']
             if b == True:
@@ -32,26 +33,22 @@ class ParsVk:
     def create_a_open_list(self):
         a = ParsVk.req_url(self)
         open_list = []
+        list_template = "{count}\n"
         for i in a['items']:
             b = i['is_closed']
             if b == False:
                 open_list.append(i)
-        return open_list
+                with open('Open_acc.txt', 'w', encoding='utf-8') as file:
+                    file.write(str(list_template).format(**open_list))
+        return file
 
 
 if __name__ == '__main__':
-    prs = ParsVk('https://vk.com/academyofman?w=wall-45595714_10452971')
+    prs = ParsVk('https://vk.com/ishok?w=wall-28761941_786487')
     prs.req_url()
     print('*' * 80)
     print(prs.create_a_close_list)
     print('*' * 80)
     print(prs.create_a_open_list)
     print('*' * 80)
-
-    for i in prs.create_a_close_list:
-        print(i)
-
-    print('*' * 80)
-
-    for i in prs.create_a_open_list:
-        print(i)
+    print(type(prs.create_a_close_list))
