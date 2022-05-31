@@ -62,6 +62,7 @@ def parsing(message):
         chat_parser = ParsVk(message.text)
         chat_parser_id_open = chat_parser.show_file
 
+
         bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в txt файле:')
         time.sleep(random.randint(2, 5))
         file = open(r'All_open_acc.txt', 'rb')
