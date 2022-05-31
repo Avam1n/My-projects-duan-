@@ -74,6 +74,7 @@ def parsing(message):
         bot.send_message(message.chat.id, "Что-то пошло не так, проверьте ссылку, она должна быть VK")
 
 
+
 def answer_q(message):
     bot.send_message(message.chat.id, "Надеюсь это не сарказм, {0.first_name}! :-)".format(message.from_user))
 
