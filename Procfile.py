@@ -1,0 +1,1 @@
+web: gunicorn Super_bot:app --log-file=-
