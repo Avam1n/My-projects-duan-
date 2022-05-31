@@ -3,7 +3,8 @@ import config
 from telebot import types
 import random
 from PARSING.vk_prs import ParsVk
-from io import BytesIO
+import os
+import time
 
 bot = telebot.TeleBot(config.Token)
 
@@ -23,9 +24,7 @@ stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur
 
          }
 
-helper = {'helping': ',я могу показать Вам актуальные данные по валюте.'}
-
-list_id = ('count\n')
+helper = {'helping': ',я научился собирать незначительные данные по посту в VK, напиши "go" и попробуй!'}
 
 
 @bot.message_handler(commands=['start'])
@@ -53,26 +52,25 @@ def dialog(message):
         choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
 
     if message.text == 'go':
-        url = bot.send_message(message.chat.id, "Кидай ссылку, челик")
+        url = bot.send_message(message.chat.id, "Нужна ссылка на пост данные по которому хотите узнать...")
         bot.register_next_step_handler(url, parsing)
 
 
 @bot.message_handler(content_types=['document', 'text'])
 def parsing(message):
-    chat_parser = ParsVk(message.text)
-    chat_parser_id_open = chat_parser.create_a_open_list
-    chat_parser_id_close = chat_parser.create_a_close_list
-    # bot.send_message(message.chat.id, f'Открытые акки:')
-    # bot.send_document(message.chat.id, chat_parser_id_close)
+    try:
+        chat_parser = ParsVk(message.text)
+        chat_parser_id_open = chat_parser.show_file
 
-    bot.send_message(message.chat.id, f'Закрытые акки:')
-    # if len(chat_parser_id_close) > 4096:
-    #     for x in range(0, len(chat_parser_id_close), 4096):
-    #         bot.send_message(message.chat.id, chat_parser_id_close[x:x + 4096])
-    # else:
-    bot.send_message(message.chat.id, chat_parser_id_close)
-
-    print(chat_parser_id_close)
+        bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в txt файле:')
+        time.sleep(random.randint(2, 5))
+        file = open(r'All_open_acc.txt', 'rb')
+        bot.send_document(message.chat.id, file)
+        file.close()
+        bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
+        os.remove('All_open_acc.txt')
+    except Exception as err:
+        bot.send_message(message.chat.id, "Что-то пошло не так, проверьте ссылку, она должна быть VK")
 
 
 def answer_q(message):
