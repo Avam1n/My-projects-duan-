@@ -24,7 +24,7 @@ stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur
 
          }
 
-helper = {'helping': ',я научился собирать незначительные данные по посту в VK, напиши "go" и попробуй!'}
+helper = {'helping': ',я научился собирать незначительную информацию по посту в VK, напиши "go" и попробуй!'}
 
 
 @bot.message_handler(commands=['start'])
@@ -51,7 +51,7 @@ def dialog(message):
         bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
         choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
 
-    if message.text == 'go':
+    if message.text.lower() == 'go':
         url = bot.send_message(message.chat.id, "Нужна ссылка на пост данные по которому хотите узнать...")
         bot.register_next_step_handler(url, parsing)
 
