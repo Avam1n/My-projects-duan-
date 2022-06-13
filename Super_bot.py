@@ -26,6 +26,8 @@ stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur
 
 helper = {'helping': ',я научился собирать незначительную информацию по посту в VK, напиши "go" и попробуй!'}
 
+list_id = [655226441]
+
 
 @bot.message_handler(commands=['start'])
 def start_bot(message):
@@ -51,28 +53,30 @@ def dialog(message):
         bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
         choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
 
-    if message.text.lower() == 'go':
+    if message.text.lower() == 'go' and message.from_user.id == message.from_user.id in list_id:
         url = bot.send_message(message.chat.id, "Нужна ссылка на пост данные по которому хотите узнать...")
         bot.register_next_step_handler(url, parsing)
 
 
 @bot.message_handler(content_types=['document', 'text'])
 def parsing(message):
-    try:
-        chat_parser = ParsVk(message.text)
-        chat_parser_id_open = chat_parser.show_file
+    if message.text.lower == 'stop':
+        answer_at_stop = bot.send_message(message.chat.id, 'STOP так STOP ;-)')
+        bot.register_next_step_handler(answer_at_stop, start_bot)
+    else:
+        try:
+            chat_parser = ParsVk(message.text)
+            chat_parser_id_open = chat_parser.show_file
 
-
-        bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в txt файле:')
-        time.sleep(random.randint(2, 5))
-        file = open(r'All_open_acc.txt', 'rb')
-        bot.send_document(message.chat.id, file)
-        file.close()
-        bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
-        os.remove('All_open_acc.txt')
-    except Exception as err:
-        bot.send_message(message.chat.id, "Что-то пошло не так, проверьте ссылку, она должна быть VK")
-
+            bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в txt файле:')
+            time.sleep(random.randint(2, 5))
+            file = open(r'All_open_acc.txt', 'rb')
+            bot.send_document(message.chat.id, file)
+            file.close()
+            bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
+            os.remove('All_open_acc.txt')
+        except Exception as err:
+            bot.send_message(message.chat.id, "Что-то пошло не так, проверьте ссылку, она должна быть VK")
 
 
 def answer_q(message):
