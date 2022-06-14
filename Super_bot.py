@@ -2,7 +2,7 @@ import telebot
 import config
 from telebot import types
 import random
-from PARSING.vk_prs import ParsVk
+from vk_prs import ParsVk
 import os
 import time
 
@@ -68,13 +68,13 @@ def parsing(message):
             chat_parser = ParsVk(message.text)
             chat_parser_id_open = chat_parser.show_file
 
-            bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в txt файле:')
+            bot.send_message(message.chat.id, f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
             time.sleep(random.randint(2, 5))
-            file = open(r'All_open_acc.txt', 'rb')
+            file = open(r'All_open_acc.html', 'rb')
             bot.send_document(message.chat.id, file)
             file.close()
             bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
-            os.remove('All_open_acc.txt')
+            os.remove('All_open_acc.html')
         except Exception as err:
             bot.send_message(message.chat.id, "Что-то пошло не так, проверьте ссылку, она должна быть VK")
 
