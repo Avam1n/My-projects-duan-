@@ -26,7 +26,19 @@ stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur
 
 helper = {'helping': ',я научился собирать незначительную информацию по посту в VK, нажми кнопку "Pars" и попробуй!'}
 
-list_id = [655226441, 745195390]
+list_id = [
+    655226441,
+    745195390,
+    1825653462,
+    153105553,
+    583968627,
+    727459950,
+    536214435,
+    1209620452,
+    813553024,
+    1761101364
+
+]
 
 
 @bot.message_handler(commands=['start'])
