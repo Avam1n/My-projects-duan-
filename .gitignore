@@ -1,6 +1,6 @@
 /.venv
 /pars_mat
-tk_file.py
+PARSING/tk_file.py
 *.pdf
 *.exe
 config.py
