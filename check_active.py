@@ -5,7 +5,8 @@ from collections import Counter
 
 session = vk.Session(Token_VK_not_my)
 vk_api = vk.API(session, v="5.131")
-# start_time = time.time()
+
+start_time = time.time()
 
 
 class SearchForActive:
@@ -35,7 +36,7 @@ class SearchForActive:
 
         checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
                                          offset=0,
-                                         count=100,
+                                         count=20,
                                          filter='all')['items']
         # count_str = 0
         for post_id in checking_posts:
@@ -70,7 +71,7 @@ class SearchForActive:
             # count_str += 1
             # print(f"{count_str} - {post_id}")
 
-        time.sleep(0.3)
+        time.sleep(0.4)
 
         checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
                                          offset=3 * 100,
@@ -137,11 +138,46 @@ class SearchForActive:
 
         return self.final_dict
 
+    def open_account_check(self):
+        open_account_list = vk_api.users.get(user_ids=[k for k, v in self.final_dict.items()],
+                                             fields='city')
+        try:
+            list_active_users = []
+            for i in open_account_list:  # В цикле поэлементно проверяем на соответствие желаемому условию.
+                if i.get('is_closed') is not True and i.get('deactivated') != 'deleted':
+                    list_active_users.append(i)
+            return list_active_users
+        except Exception as err:
+            print(f'{err}-- open_account_check')
+            return f'Oops!\nЧто-то пошло не так... в создании списка.'
+
+    @property
+    def show_file(self):  # Реализуем показ нужной нам информации.
+        try:
+            list_users = SearchForActive.open_account_check(self)
+            print(f'show_file-->>', list_users)
+            with open(r'Active_users.html', 'w', encoding='UTF-8') as file:
+                for element in list_users:
+                    element_with_city_item = element.get('city', f'{"-------"}')
+                    print(
+                        f"||ID: {element.get('id'):<10} "
+                        f"||Name: {element.get('first_name'):<15} "
+                        f"||Last_name: {element.get('last_name'):<20} "
+                        f"||City: --{element_with_city_item['title'] if element_with_city_item is not str(element_with_city_item) else element_with_city_item:<18} "
+                        f"||Link:   <a href='https://vk.com/id{element.get('id')}'>https://vk.com/id{element.get('id')}</a>" + "<br>",
+                        file=file)  # Настроили то как будет выглядеть информация в файле.
+            return file
+        except Exception as err:
+            print(err)
+            return f'Oops!\nЧто-то пошло не так... в отображении.'
+
 
 def main():
-    start_search = SearchForActive('uvdgrodno')
-    print(start_search.check_posts())
-    # print("---%s second ---" % (time.time() - start_time))
+    start_search = SearchForActive('ne.poverish')
+    start_search.check_posts()
+    start_search.open_account_check()
+    start_search.show_file
+    print("---%s second ---" % (time.time() - start_time))
 
 
 if __name__ == '__main__':

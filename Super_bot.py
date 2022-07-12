@@ -92,8 +92,8 @@ def parsing(message):
 
     inline_keyboard.add(button_go, button_stop)
     try:
-        chat_parser = ParsVk(message.text)
-        chat_parser_id_open = chat_parser.show_file
+        chat_post_parser = ParsVk(message.text)
+        chat_parser_id_open = chat_post_parser.show_file
 
         bot.send_message(message.chat.id,
                          f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')

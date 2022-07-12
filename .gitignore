@@ -1,6 +1,6 @@
 /.venv
 /pars_mat
-PARSING/tk_file.py
+BOTS/PARSING/tk_file.py
 *.pdf
 *.exe
 config.py
@@ -12,7 +12,7 @@ Selen_pars.py
 BOTapi.py
 search_vk_post
 pars_VK
-PARSING/vk_prs.py
+#PARSING/vk_prs.py
 
 # Created by https://www.gitignore.io
 
