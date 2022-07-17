@@ -5,6 +5,7 @@ import random
 from vk_prs import ParsVk
 import os
 import time
+from check_active import main
 
 bot = telebot.TeleBot(config.Token)
 
@@ -67,15 +68,19 @@ def dialog(message):
         choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
 
     if message.text.lower() == 'pars' and message.from_user.id == message.from_user.id in list_id:
-        inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
+        inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
 
         button_go = types.InlineKeyboardButton('start', callback_data='start')
         button_stop = types.InlineKeyboardButton('stop', callback_data='stop')
 
-        inline_keyboard.add(button_go, button_stop)
+        button_active_users = types.InlineKeyboardButton('Active users', callback_data='Active users')
+
+        inline_keyboard.add(button_go, button_stop, button_active_users)
         bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
                                           "(Чтобы начать нажми ⏩⏩ 'start')\n"
-                                          "(Для отмены нажми ⏩⏩ 'stop')",
+                                          "(Для отмены нажми ⏩⏩ 'stop')\n"
+                                          "Чтобы получить ТОП-50 активных юзеров по посту юзай:"
+                                          "'Active users'",
                          reply_markup=inline_keyboard)
 
 
@@ -85,12 +90,14 @@ def answer_q(message):
 
 @bot.message_handler(content_types=['document', 'text'])
 def parsing(message):
-    inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
+    inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
 
     button_go = types.InlineKeyboardButton('start', callback_data='start')
     button_stop = types.InlineKeyboardButton('stop', callback_data='stop')
+    button_active_users = types.InlineKeyboardButton('Active users', callback_data='Active users')
 
-    inline_keyboard.add(button_go, button_stop)
+    inline_keyboard.add(button_go, button_stop, button_active_users)
+
     try:
         chat_post_parser = ParsVk(message.text)
         chat_parser_id_open = chat_post_parser.show_file
@@ -109,6 +116,36 @@ def parsing(message):
                          f"проверь правильность ссылки.")
 
 
+@bot.message_handler(content_types=['document', 'text'])
+async def get_active_users_in_group(message):
+    inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
+
+    button_go = types.InlineKeyboardButton('start', callback_data='start')
+    button_stop = types.InlineKeyboardButton('stop', callback_data='stop')
+    button_active_users = types.InlineKeyboardButton('Active users', callback_data='Active users')
+
+    inline_keyboard.add(button_go, button_stop, button_active_users)
+
+    try:
+        parsing_for_active_users = main(
+            message.text)  # Вызываем метод main() из скрипта, чтобы была последовательность выполнения этого скрипта.
+
+        bot.send_message(message.chat.id, f"")
+
+        bot.send_message(message.chat.id,
+                         f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
+        time.sleep(random.randint(2, 5))
+        active_users_file = open(r'Active_users.html', 'rb')
+        bot.send_document(message.chat.id, active_users_file)
+        active_users_file.close()
+        bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_keyboard)
+        os.remove('Active_users.html')
+    except Exception as err:
+        bot.send_message(message.chat.id,
+                         f"Oops! Что-то пошло не так!({err})\n {message.from_user.first_name}, "
+                         f"проверь правильность введенных данных.")
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     """Привязываем функционал инлайн-кнопке. """
@@ -120,10 +157,21 @@ def callback_inline(call):
             elif call.data == 'start':
                 mess_from_user_start = bot.send_message(call.message.chat.id, 'Давай ссылку на пост...')
                 bot.register_next_step_handler(message=mess_from_user_start, callback=parsing)
+            elif call.data == 'Active users':
+                mess_from_user_start_active_users = bot.send_message(call.message.chat.id,
+                                                                     f'Пример ввода <<id>> группы --> \'cybersportby\' '
+                                                                     f'или --> \'78017410\'\n '
+                                                                     )
+                bot.register_next_step_handler(message=mess_from_user_start_active_users,
+                                               callback=get_active_users_in_group)
 
     except Exception as err:
         print(repr(err))
 
 
-if __name__ == '__main__':
+def start_bot_main():
     bot.infinity_polling(non_stop=True, interval=0)
+
+
+if __name__ == '__main__':
+    start_bot_main()
