@@ -1,9 +1,7 @@
 import re
 import time
-
 import vk
 from config import Token_VK_not_my
-from check_active import SearchForActive
 
 session = vk.Session(Token_VK_not_my)
 vk_api = vk.API(session, v="5.131")
@@ -47,7 +45,6 @@ class ParsVk:
             print(f'{err}-- create_a_open_list')
             return f'Oops!\nЧто-то пошло не так... в создании списка.'
 
-    @property
     def show_file(self):  # Реализуем показ нужной нам информации.
         try:
             list_user = ParsVk.create_a_open_list(self)
@@ -70,5 +67,5 @@ class ParsVk:
 if __name__ == '__main__':
     play_pars = ParsVk()
     play_pars.create_a_open_list()
-    play_pars.show_file
+    play_pars.show_file()
     play_pars.req_url()
