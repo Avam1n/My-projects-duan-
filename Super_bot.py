@@ -117,7 +117,7 @@ def parsing(message):
 
 
 @bot.message_handler(content_types=['document', 'text'])
-async def get_active_users_in_group(message):
+def get_active_users_in_group(message):
     inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
 
     button_go = types.InlineKeyboardButton('start', callback_data='start')
@@ -130,15 +130,19 @@ async def get_active_users_in_group(message):
         parsing_for_active_users = main(
             message.text)  # Вызываем метод main() из скрипта, чтобы была последовательность выполнения этого скрипта.
 
-        bot.send_message(message.chat.id, f"")
-
         bot.send_message(message.chat.id,
                          f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
         time.sleep(random.randint(2, 5))
         active_users_file = open(r'Active_users.html', 'rb')
         bot.send_document(message.chat.id, active_users_file)
         active_users_file.close()
-        bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_keyboard)
+        bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
+        bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
+                                          "(Чтобы начать нажми ⏩⏩ 'start')\n"
+                                          "(Для отмены нажми ⏩⏩ 'stop')\n"
+                                          "Чтобы получить ТОП-50 активных юзеров по посту юзай:"
+                                          "'Active users'",
+                         reply_markup=inline_keyboard)
         os.remove('Active_users.html')
     except Exception as err:
         bot.send_message(message.chat.id,
@@ -169,9 +173,5 @@ def callback_inline(call):
         print(repr(err))
 
 
-def start_bot_main():
-    bot.infinity_polling(non_stop=True, interval=0)
-
-
 if __name__ == '__main__':
-    start_bot_main()
+    bot.infinity_polling(non_stop=True, interval=0)
