@@ -24,14 +24,15 @@ class SearchForActive:
     def check_group(self):
         """Принимаем и настраиваем на вывод id группы (пример: ввод -->'cybersportby', вывод --> '-78017410')."""
         try:
-            if self.group_id is not int(self.group_id):
-                get_group = vk_api.groups.getById(group_id=self.group_id)
-                get_group_id = get_group[0]
-                group_id = get_group_id.get('id')
-                return f'-{group_id}'
-            else:
-                get_group = self.group_id
-                return get_group
+            match self.group_id:
+                case int(self.group_id):
+                    get_group = self.group_id
+                    return get_group
+                case _:
+                    get_group = vk_api.groups.getById(group_id=self.group_id)
+                    get_group_id = get_group[0]
+                    group_id = get_group_id.get('id')
+                    return f'-{group_id}'
         except Exception as err:
             return f'Что-то пошло не так, описание ошибки ---> {err}'
 
@@ -41,7 +42,7 @@ class SearchForActive:
 
         checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
                                          offset=0,
-                                         count=100,
+                                         count=20,
                                          filter='all')['items']
         count_str = 0
         for post_id in checking_posts:
@@ -50,72 +51,72 @@ class SearchForActive:
             count_str += 1
             print(f"{count_str} - {post_id}")
 
-        time.sleep(0.3)
-
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=1 * 100,
-                                         count=100,
-                                         filter='all')['items']
-
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        time.sleep(0.3)
-
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=2 * 100,
-                                         count=100,
-                                         filter='all')['items']
-
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        time.sleep(0.4)
-
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=3 * 100,
-                                         count=100,
-                                         filter='all')['items']
-
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        time.sleep(0.3)
-
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=4 * 100,
-                                         count=100,
-                                         filter='all')['items']
-
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        time.sleep(0.3)
-
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=5 * 100,
-                                         count=100,
-                                         filter='all')['items']
-
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        time.sleep(0.3)
+        # time.sleep(0.3)
+        #
+        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+        #                                  offset=1 * 100,
+        #                                  count=100,
+        #                                  filter='all')['items']
+        #
+        # for post_id in checking_posts:
+        #     self.owner_id_list.append(post_id['owner_id'])
+        #     self.id_list.append(post_id['id'])
+        #     count_str += 1
+        #     print(f"{count_str} - {post_id}")
+        #
+        # time.sleep(0.3)
+        #
+        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+        #                                  offset=2 * 100,
+        #                                  count=100,
+        #                                  filter='all')['items']
+        #
+        # for post_id in checking_posts:
+        #     self.owner_id_list.append(post_id['owner_id'])
+        #     self.id_list.append(post_id['id'])
+        #     count_str += 1
+        #     print(f"{count_str} - {post_id}")
+        #
+        # time.sleep(0.4)
+        #
+        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+        #                                  offset=3 * 100,
+        #                                  count=100,
+        #                                  filter='all')['items']
+        #
+        # for post_id in checking_posts:
+        #     self.owner_id_list.append(post_id['owner_id'])
+        #     self.id_list.append(post_id['id'])
+        #     count_str += 1
+        #     print(f"{count_str} - {post_id}")
+        #
+        # time.sleep(0.3)
+        #
+        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+        #                                  offset=4 * 100,
+        #                                  count=100,
+        #                                  filter='all')['items']
+        #
+        # for post_id in checking_posts:
+        #     self.owner_id_list.append(post_id['owner_id'])
+        #     self.id_list.append(post_id['id'])
+        #     count_str += 1
+        #     print(f"{count_str} - {post_id}")
+        #
+        # time.sleep(0.3)
+        #
+        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+        #                                  offset=5 * 100,
+        #                                  count=100,
+        #                                  filter='all')['items']
+        #
+        # for post_id in checking_posts:
+        #     self.owner_id_list.append(post_id['owner_id'])
+        #     self.id_list.append(post_id['id'])
+        #     count_str += 1
+        #     print(f"{count_str} - {post_id}")
+        #
+        # time.sleep(0.3)
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -187,4 +188,4 @@ def main(some):
 
 
 if __name__ == '__main__':
-    main()
+    main('78017410')
