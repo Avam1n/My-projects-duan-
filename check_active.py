@@ -36,87 +36,27 @@ class SearchForActive:
         except Exception as err:
             return f'Что-то пошло не так, описание ошибки ---> {err}'
 
-    def check_posts(self):
+    def check_posts(self, get_offset: int):
         """Данный метод нужен для того, чтобы перебрать и взять нужную информацию по ВСЕМ постам группы, и определяем
         самого активного участника.(определение проходит исключительно по лайкам)"""
+        offset = 0
+        count = 0
+        while True:
+            checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
+                                             offset=offset,
+                                             count=100,
+                                             filter='all')['items']
+            for post_id in checking_posts:
+                self.owner_id_list.append(post_id['owner_id'])
+                self.id_list.append(post_id['id'])
+                count += 1
+                print(f"{count} - {post_id}")
+            offset += 100
+            time.sleep(0.4)
+            count += 1
+            if offset == get_offset:
+                break
 
-        checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                         offset=0,
-                                         count=20,
-                                         filter='all')['items']
-        count_str = 0
-        for post_id in checking_posts:
-            self.owner_id_list.append(post_id['owner_id'])
-            self.id_list.append(post_id['id'])
-            count_str += 1
-            print(f"{count_str} - {post_id}")
-
-        # time.sleep(0.3)
-        #
-        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-        #                                  offset=1 * 100,
-        #                                  count=100,
-        #                                  filter='all')['items']
-        #
-        # for post_id in checking_posts:
-        #     self.owner_id_list.append(post_id['owner_id'])
-        #     self.id_list.append(post_id['id'])
-        #     count_str += 1
-        #     print(f"{count_str} - {post_id}")
-        #
-        # time.sleep(0.3)
-        #
-        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-        #                                  offset=2 * 100,
-        #                                  count=100,
-        #                                  filter='all')['items']
-        #
-        # for post_id in checking_posts:
-        #     self.owner_id_list.append(post_id['owner_id'])
-        #     self.id_list.append(post_id['id'])
-        #     count_str += 1
-        #     print(f"{count_str} - {post_id}")
-        #
-        # time.sleep(0.4)
-        #
-        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-        #                                  offset=3 * 100,
-        #                                  count=100,
-        #                                  filter='all')['items']
-        #
-        # for post_id in checking_posts:
-        #     self.owner_id_list.append(post_id['owner_id'])
-        #     self.id_list.append(post_id['id'])
-        #     count_str += 1
-        #     print(f"{count_str} - {post_id}")
-        #
-        # time.sleep(0.3)
-        #
-        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-        #                                  offset=4 * 100,
-        #                                  count=100,
-        #                                  filter='all')['items']
-        #
-        # for post_id in checking_posts:
-        #     self.owner_id_list.append(post_id['owner_id'])
-        #     self.id_list.append(post_id['id'])
-        #     count_str += 1
-        #     print(f"{count_str} - {post_id}")
-        #
-        # time.sleep(0.3)
-        #
-        # checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-        #                                  offset=5 * 100,
-        #                                  count=100,
-        #                                  filter='all')['items']
-        #
-        # for post_id in checking_posts:
-        #     self.owner_id_list.append(post_id['owner_id'])
-        #     self.id_list.append(post_id['id'])
-        #     count_str += 1
-        #     print(f"{count_str} - {post_id}")
-        #
-        # time.sleep(0.3)
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -145,9 +85,9 @@ class SearchForActive:
         return self.final_dict
 
     def open_account_check(self):
-        open_account_list = vk_api.users.get(user_ids=[k for k, v in self.final_dict.items()],
-                                             fields='city')
         try:
+            open_account_list = vk_api.users.get(user_ids=[k for k, v in self.final_dict.items()],
+                                                 fields='city')
             list_active_users = []
             for i in open_account_list:  # В цикле поэлементно проверяем на соответствие желаемому условию.
                 if i.get('is_closed') is not True and i.get('deactivated') != 'deleted':
@@ -179,13 +119,13 @@ class SearchForActive:
                 return f'Oops!\nЧто-то пошло не так... в отображении.'
 
 
-def main(some):
+def main(some, offset):
     start_search = SearchForActive(some)
-    start_search.check_posts()
+    start_search.check_posts(offset)
     start_search.open_account_check()
     start_search.show_file()
-    print("---%s second ---" % (time.time() - start_time))
+    return f'{"Выполнено за --- %.0f --- секунд(ы)! :)" % (time.time() - start_time)}'
 
 
 if __name__ == '__main__':
-    main('78017410')
+    main('cybersportby')
