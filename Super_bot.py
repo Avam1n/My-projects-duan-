@@ -72,7 +72,7 @@ def answer_to_question(message):
 def dialog(message):
     if message.text == 'Help!':
         bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
-        choice = bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
+        bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
 
     if message.text.lower() == 'pars' and message.from_user.id == message.from_user.id in list_id:
         inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
@@ -84,14 +84,15 @@ def dialog(message):
         inline_keyboard.add(button_go, button_stop)
         inline_keyboard.add(button_active_users)
 
-        info_mess = bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
-                                                      "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
-                                                      "(Для отмены нажми ⏩⏩ 'Стоп')\n"
-                                                      "Чтобы получить ТОП-50 активных юзеров по группе юзай: "
-                                                      "'Активные пользователи'", reply_markup=inline_keyboard)
+        bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
+                                          "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
+                                          "(Для отмены нажми ⏩⏩ 'Стоп')\n"
+                                          "Чтобы получить ТОП-50 активных юзеров по группе юзай: "
+                                          "'Активные пользователи'", reply_markup=inline_keyboard)
     else:
-        bot.send_message(message.chat.id, f'Прошу прощения, {message.from_user.first_name}, эта функция еще тестируется.\n'
-                                          f'Вы сможете ей воспользоваться в скором времени. Приношу свои извинения.')
+        bot.send_message(message.chat.id,
+                         f'Прошу прощения, {message.from_user.first_name}, эта функция еще тестируется.\n'
+                         f'Вы сможете ей воспользоваться в скором времени. Приношу свои извинения.')
 
 
 def answer_q(message):
@@ -112,9 +113,9 @@ def answer_q(message):
 
         else:
             bot.send_message(message.chat.id,
-                             "В скором времени все наладится, я в это верю и ты, {0.first_name}, верь вместе со мной.".format(
-                                 message.from_user))
-    except Exception as err:
+                             "В скором времени все наладится, я в это верю и ты, {0.first_name}, "
+                             "верь вместе со мной.".format(message.from_user))
+    except Exception:
         bot.send_message(message.chat.id, "Я не совсем понял, что ты имеешь ввиду, но хочу верить, что все хорошо.")
 
 
@@ -140,8 +141,7 @@ def parsing(message):
     button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
     button_active_users = types.InlineKeyboardButton('Активные пользователи', callback_data='Active users')
 
-    inline_keyboard.add(button_go)
-    inline_keyboard.add(button_stop)
+    inline_keyboard.add(button_go, button_stop)
     inline_keyboard.add(button_active_users)
 
     try:
@@ -160,32 +160,6 @@ def parsing(message):
         bot.send_message(message.chat.id,
                          f"Oops! Что-то пошло не так!({err})\n {message.from_user.first_name}, "
                          f"проверь правильность ссылки.")
-
-
-@bot.message_handler(content_types=['document', 'text'])
-def get_active_users_in_group(message):
-    try:
-        parsing_for_active_users = main(
-            message.text)  # Вызываем метод main() из скрипта, чтобы была последовательность выполнения этого скрипта.
-
-        bot.send_message(message.chat.id,
-                         f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
-        time.sleep(random.randint(2, 5))
-        active_users_file = open(r'Active_users.html', 'rb')
-        bot.send_document(message.chat.id, active_users_file)
-        active_users_file.close()
-        bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
-        bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
-                                          "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
-                                          "(Для отмены нажми ⏩⏩ 'Стоп')\n"
-                                          "Чтобы получить ТОП-50 активных юзеров по группе юзай:"
-                                          "'Активные пользователи'",
-                         reply_markup=inline_())
-        os.remove('Active_users.html')
-    except Exception as err:
-        bot.send_message(message.chat.id,
-                         f"Oops! Что-то пошло не так!({err})\n {message.from_user.first_name}, "
-                         f"проверь правильность введенных данных.")
 
 
 def offset_100(message):
@@ -235,10 +209,10 @@ def callback_inline(call):
                 mess_from_user_start = bot.send_message(call.message.chat.id, 'Давай ссылку на пост!')
                 bot.register_next_step_handler(message=mess_from_user_start, callback=parsing)
             case 'Active users':
-                mess_from_user_start_active_users = bot.send_message(call.message.chat.id,
-                                                                     'Введи ID группы. \n'
-                                                                     '(пример:\'cybersportby\' или \'78017410\')',
-                                                                     reply_markup=inline_())
+                bot.send_message(call.message.chat.id,
+                                 'Введи ID группы. \n'
+                                 '(пример:\'cybersportby\' или \'78017410\')',
+                                 reply_markup=inline_())
 
             case 'button_100':
                 mess_from_user_time = bot.send_message(call.message.chat.id,
