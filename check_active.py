@@ -40,7 +40,7 @@ class SearchForActive:
         """Данный метод нужен для того, чтобы перебрать и взять нужную информацию по ВСЕМ постам группы, и определяем
         самого активного участника.(определение проходит исключительно по лайкам)"""
         offset = 0
-        count = 0
+        # count = 0
         while True:
             checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
                                              offset=offset,
@@ -49,14 +49,13 @@ class SearchForActive:
             for post_id in checking_posts:
                 self.owner_id_list.append(post_id['owner_id'])
                 self.id_list.append(post_id['id'])
-                count += 1
-                print(f"{count} - {post_id}")
+                # count += 1
+                # print(f"{count} - {post_id}")
             offset += 100
             time.sleep(0.4)
-            count += 1
+            # count += 1
             if offset == get_offset:
                 break
-
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -92,6 +91,11 @@ class SearchForActive:
             for i in open_account_list:  # В цикле поэлементно проверяем на соответствие желаемому условию.
                 if i.get('is_closed') is not True and i.get('deactivated') != 'deleted':
                     list_active_users.append(i)
+            for key, value in self.final_dict.items():
+                for item in list_active_users:
+                    if key == item.get('id'):
+                        a = dict(like=f'{value}')
+                        item.update(a)
             return list_active_users
         except Exception as err:
             print(f'{err}-- open_account_check')
@@ -108,6 +112,7 @@ class SearchForActive:
                         f"||Name: {element.get('first_name'):<15} "
                         f"||Last_name: {element.get('last_name'):<20} "
                         f"||City: --{element_with_city_item['title'] if element_with_city_item is not str(element_with_city_item) else element_with_city_item:<18} "
+                        f"||Liked posts: {element.get('like'):<5}"
                         f"||Link:   <a href='https://vk.com/id{element.get('id')}'>https://vk.com/id{element.get('id')}</a>" + "<br>",
                         file=file)  # Настроили то как будет выглядеть информация в файле.
             return file
@@ -128,4 +133,4 @@ def main(some, offset):
 
 
 if __name__ == '__main__':
-    main('cybersportby')
+    main()
