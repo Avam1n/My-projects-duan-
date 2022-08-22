@@ -8,42 +8,21 @@ import time
 from check_active import main
 from textblob import TextBlob
 from translate import Translator
+# from SQLite_script import SQLight
+import asyncio
 
 bot: TeleBot = telebot.TeleBot(config.Token)
-
-# placeholder = {'rates': 'Спросите про курс...',
-#                'gas': 'Узнайте цену на бензин...',
-#                'weather': 'Может о погоде хотели узнать?',
-#                'how_are_you': 'Спроси "как твои дела?"'
-#                }
-
-# range_placeholder = list(placeholder.values())
-args = 0
+# db = SQLight('DB_Telegram_followers.db')
 
 stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur76SZJAQ',
          'think': 'CAACAgIAAxkBAAEErsJieD7Oax4LPgsOg-DPmpsg7xXnEwACIhMAAl1scEuuLYe9O-OAPiQE',
          'you_good': 'CAACAgIAAxkBAAEErshieD9_1LBIHCxCztHT9gfPlNU7PAACfRMAAqN3qEvCWDsDiG_N4CQE',
          'oh_my': 'CAACAgIAAxkBAAEErtNieEHb4YErLRAV7IaVo3lruKSUzQACYhEAApOEmEnCDV-VWpFuAyQE',
          'im_god': 'CAACAgIAAxkBAAEErtVieEIvVxOeHVVAF7JeeZAonNVmCAACPgAD78MbMqgqgDn40xkAASQE',
-
          }
 
 helper = {'helping': ',я научился собирать незначительную информацию по посту в VK, еще я могу определить '
-                     'ТОП актимных пользователей паблика нажми кнопку "Pars" и попробуй!'}
-
-list_id = [
-    655226441,
-    745195390,
-    1825653462,
-    153105553,
-    583968627,
-    727459950,
-    536214435,
-    1209620452,
-    813553024,
-    1761101364
-
-]
+                     'ТОП активных пользователей паблика нажми кнопку "Pars" и попробуй!'}
 
 
 @bot.message_handler(commands=['start'])
@@ -59,9 +38,37 @@ def start_bot(message):
                      "Меня зовут - {0.first_name}!".format(bot.get_me()),
                      reply_markup=keyboard)
 
+"""Со временем реализую подписку на Бота."""
+# async def subscribe(message: types.Message):
+#     if not db.sub_exists(message.from_user.id):
+#         print(db.sub_exists(message.from_user.id))
+#         db.add_subs(message.from_user.id)
+#     else:
+#         db.update_subs(message.from_user.id, True)
+#     bot.send_message(message.chat.id, "Вы успешно подписались на меня.")
+#
+#
+# @bot.message_handler(commands=['subscribe'])
+# def start_subscribe(message: types.Message):
+#     asyncio.run(subscribe(message))
+#
+#
+# async def unsubscribe(message: types.Message):
+#     if not db.sub_exists(message.from_user.id):
+#         db.add_subs(user_id=message.from_user.id, status=False)
+#         bot.send_message(message.chat.id, "Вы итак не подписались на меня.(((")
+#     else:
+#         db.update_subs(message.from_user.id, False)
+#         bot.send_message(message.chat.id, "Как жаль, что Вы отписались от меня.(((")
+#
+#
+# @bot.message_handler(commands=['unsubscribe'])
+# def start_unsubscribe(message: types.Message):
+#     asyncio.run(unsubscribe(message))
+#
 
 @bot.message_handler(
-    regexp='^(Как как дела[?]{1})?(как [а-я]{0,4})?( дела[?]{0,1})?$')
+    regexp='^(Как дела[?]{1})?(как [а-я]{0,4})?(дела[?]{0,1})?$')
 def answer_to_question(message):
     """Примитивный диалог, в скором времени буду стараться лучше ))))"""
     answer = bot.send_message(message.chat.id, "Я отлично, сам ты как???")
@@ -70,29 +77,32 @@ def answer_to_question(message):
 
 @bot.message_handler(content_types=['text'])
 def dialog(message):
-    if message.text == 'Help!':
-        bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
-        bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
+    match message.text.lower():
+        case 'help!':
+            bot.send_sticker(message.chat.id, f"{stick['oh_my']}")
+            bot.send_message(message.chat.id, "{0.first_name} {1}".format(message.from_user, helper['helping']))
+        case 'pars':
+            match message.from_user.id in config.list_id:
+                case True:
+                    inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
 
-    if message.text.lower() == 'pars' and message.from_user.id == message.from_user.id in list_id:
-        inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
+                    button_go = types.InlineKeyboardButton('Старт', callback_data='start')
+                    button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
+                    button_active_users = types.InlineKeyboardButton('Активные пользователи',
+                                                                     callback_data='Active users')
 
-        button_go = types.InlineKeyboardButton('Старт', callback_data='start')
-        button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
-        button_active_users = types.InlineKeyboardButton('Активные пользователи', callback_data='Active users')
+                    inline_keyboard.add(button_go, button_stop)
+                    inline_keyboard.add(button_active_users)
 
-        inline_keyboard.add(button_go, button_stop)
-        inline_keyboard.add(button_active_users)
-
-        bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
-                                          "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
-                                          "(Для отмены нажми ⏩⏩ 'Стоп')\n"
-                                          "Чтобы получить ТОП-50 активных юзеров по группе юзай: "
-                                          "'Активные пользователи'", reply_markup=inline_keyboard)
-    else:
-        bot.send_message(message.chat.id,
-                         f'Прошу прощения, {message.from_user.first_name}, эта функция еще тестируется.\n'
-                         f'Вы сможете ей воспользоваться в скором времени. Приношу свои извинения.')
+                    bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
+                                                      "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
+                                                      "(Для отмены нажми ⏩⏩ 'Стоп')\n"
+                                                      "Чтобы получить ТОП-50 активных юзеров по группе юзай: "
+                                                      "'Активные пользователи'", reply_markup=inline_keyboard)
+                case False:
+                    bot.send_message(message.chat.id,
+                                     f'Прошу прощения, {message.from_user.first_name}, эта функция еще тестируется.\n'
+                                     f'Вы сможете ей воспользоваться в скором времени. Приношу свои извинения.')
 
 
 def answer_q(message):
@@ -146,7 +156,7 @@ def parsing(message):
 
     try:
         chat_post_parser = ParsVk(message.text)
-        chat_parser_id_open = chat_post_parser.show_file
+        chat_post_parser.show_file()
 
         bot.send_message(message.chat.id,
                          f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
@@ -156,9 +166,9 @@ def parsing(message):
         file.close()
         bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_keyboard)
         os.remove('All_open_acc.html')
-    except Exception as err:
+    except Exception as error:
         bot.send_message(message.chat.id,
-                         f"Oops! Что-то пошло не так!({err})\n {message.from_user.first_name}, "
+                         f"Oops! Что-то пошло не так!({error})\n {message.from_user.first_name}, "
                          f"проверь правильность ссылки.")
 
 
@@ -191,9 +201,9 @@ def offset_function(message):
         bot.send_message(message.chat.id, 'Для отмены нажми ⏩⏩ \'Стоп\'\n'
                                           'Для того чтобы продолжить - кидай следующий...', reply_markup=inline_())
         os.remove('Active_users.html')
-    except Exception as err:
+    except Exception as error:
         bot.send_message(message.chat.id,
-                         f"Oops! Что-то пошло не так!({err})\n {message.from_user.first_name}, "
+                         f"Oops! Что-то пошло не так!({error})\n {message.from_user.first_name}, "
                          f"проверь правильность введенных данных.")
 
 
@@ -203,7 +213,7 @@ def callback_inline(call):
     try:
         match call.data:
             case 'stop':
-                mess_from_user_stop = bot.send_message(call.message.chat.id, 'Стоп, так стоп!')
+                mess_from_user_stop = bot.edit_message_text(call.inline_message_id, 'Стоп, так стоп!')
                 bot.register_next_step_handler(message=mess_from_user_stop, callback=dialog)
             case 'start':
                 mess_from_user_start = bot.send_message(call.message.chat.id, 'Давай ссылку на пост!')
@@ -234,12 +244,14 @@ def callback_inline(call):
                 bot.register_next_step_handler(message=mess_from_user_time,
                                                callback=offset_all)
 
-
-
-    except Exception as err:
-        print(repr(err))
-        print(err)
+    except Exception as error:
+        print(repr(error))
+        print(error)
 
 
 if __name__ == '__main__':
-    bot.infinity_polling(non_stop=True, interval=0)
+    try:
+        bot.infinity_polling(non_stop=True, interval=1)
+    except Exception as e:
+        print(e)
+        bot.infinity_polling(non_stop=True, interval=2)
