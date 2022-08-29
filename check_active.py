@@ -2,6 +2,7 @@ import time
 import vk
 from config import Token_VK_not_my
 from collections import Counter
+import random
 
 session = vk.Session(Token_VK_not_my)
 vk_api = vk.API(session, v="5.131")
@@ -38,41 +39,36 @@ class SearchForActive:
 
     def check_posts(self, get_offset: int) -> dict:
         """Данный метод нужен для того, чтобы перебрать и взять нужную информацию по ВСЕМ постам группы, и определяем
-        самого активного участника.(определение проходит исключительно по лайкам)"""
+        самого активного участника.(определение проходит исключительно по лайкам)
+        Время выполнения зависит от объема данных(в среднем 5 минут!)"""
 
         offset = 0
-        count = 0
+        # count = 1
 
         while True:
+            time.sleep(random.uniform(0.4, 0.6))
             checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
                                              offset=offset,
                                              count=100,
                                              filter='all')['items']
-            # for post_id in checking_posts:
-            #     self.owner_id_list.append(post_id['owner_id'])
-            #     self.id_list.append(post_id['id'])
-            #     count += 1
-            #     print(f"{count} - {post_id}")
-            # offset += 100
-            # time.sleep(0.4)
-            # count += 1
-            # if offset == get_offset:
-            #     break
-            time.sleep(0.4)
-            if offset == get_offset:
-                break
-            elif len(checking_posts) != 0:
+
+            if len(checking_posts) == 100:
                 for post_id in checking_posts:
                     self.owner_id_list.append(post_id['owner_id'])
                     self.id_list.append(post_id['id'])
-                    count += 1
-                    print(f"{count} - {post_id}")
-                offset += 100
-                count += 1
-            else:
-                # if offset == get_offset:
-                #     break
+                    # print(f"{count} - {post_id}")
+                offset += int(len(checking_posts))
+                if get_offset == offset:
+                    break
+
+            elif len(checking_posts) != 100:
+                for post_id in checking_posts:
+                    self.owner_id_list.append(post_id['owner_id'])
+                    self.id_list.append(post_id['id'])
+                    # print(f"{count} - {post_id}")
+                offset += int(len(checking_posts))
                 break
+
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
 
@@ -80,29 +76,23 @@ class SearchForActive:
             """Усыпляем каждый раз потому что того требует VkAPI."""
 
             offset_likes = 0
-            count = 1
+            # count = 1
             while True:
-                time.sleep(0.6)
+                time.sleep(random.uniform(0.4, 0.6))
                 check_list = vk_api.likes.getList(type='post',
                                                   owner_id=value,
                                                   item_id=key,
                                                   extended=0,
-                                                  count=1000,
-                                                  offset=offset_likes)
+                                                  offset=offset_likes,
+                                                  count=1000)
 
                 checking_item_list = check_list['items']
+
                 for element in checking_item_list:
                     self.favorite_users.append(element)
-                    print(f'{count}---{element}')
-                    count += 1
-
-                offset_likes += 1000
-
-                # if len(check_list['items']) != 0:
-                #     for element in check_list['items']:
-                #         print(f'{count}---{element}')
-                #         self.favorite_users.append(element)
-                #         count += 1
+                    # print(f'{count}---{element}')
+                    # count += 1
+                offset_likes += len(checking_item_list)
                 if len(checking_item_list) == 0:
                     break
 
@@ -167,4 +157,4 @@ def main(some, offset):
 
 
 if __name__ == '__main__':
-    main('zloyshkolnik', 100)
+    print(main())

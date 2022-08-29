@@ -74,5 +74,5 @@ class ParsVk:
 
 
 if __name__ == '__main__':
-    play_pars = ParsVk('https://vk.com/ne.poverish?w=wall-28477986_6615529')
+    play_pars = ParsVk()
     play_pars.show_file()
