@@ -1,8 +1,10 @@
 import time
 import vk
-from config import Token_VK_not_my
+from vk import exceptions
+from config import Token_VK_not_my, Token_VK, Token_VK_Jeki
 from collections import Counter
 import random
+# import logging
 
 session = vk.Session(Token_VK_not_my)
 vk_api = vk.API(session, v="5.131")
@@ -11,6 +13,7 @@ start_time = time.time()
 
 
 class SearchForActive:
+    token = {1: vk.Session(Token_VK), 2: vk.Session(Token_VK_Jeki), 3: vk.Session(Token_VK_not_my)}
     group_id = ''
     dict_posts = {}
     owner_id_list = []
@@ -43,31 +46,44 @@ class SearchForActive:
         Время выполнения зависит от объема данных(в среднем 5 минут!)"""
 
         offset = 0
-        # count = 1
+        count = 1
+
+        def yield_token():
+            while True:
+                yield from [token for key_token, token in self.token.items()]
 
         while True:
-            time.sleep(random.uniform(0.4, 0.6))
-            checking_posts = vk_api.wall.get(owner_id=SearchForActive.check_group(self),
-                                             offset=offset,
-                                             count=100,
-                                             filter='all')['items']
+            try:
+                checking_posts = vk_api.wall.get(access_token=next(yield_token()),
+                                                 owner_id=SearchForActive.check_group(self),
+                                                 offset=offset,
+                                                 count=100,
+                                                 filter='all')['items']
 
-            if len(checking_posts) == 100:
-                for post_id in checking_posts:
-                    self.owner_id_list.append(post_id['owner_id'])
-                    self.id_list.append(post_id['id'])
-                    # print(f"{count} - {post_id}")
-                offset += int(len(checking_posts))
-                if get_offset == offset:
+                if len(checking_posts) == 100:
+                    for post_id in checking_posts:
+                        self.owner_id_list.append(post_id['owner_id'])
+                        self.id_list.append(post_id['id'])
+                        print(f"{count} - {post_id}")
+                        count += 1
+                    offset += int(len(checking_posts))
+                    if get_offset == offset:
+                        break
+
+                elif len(checking_posts) != 100:
+                    for post_id in checking_posts:
+                        self.owner_id_list.append(post_id['owner_id'])
+                        self.id_list.append(post_id['id'])
+                        print(f"{count} - {post_id}")
+                        count += 1
+                    offset += int(len(checking_posts))
                     break
 
-            elif len(checking_posts) != 100:
-                for post_id in checking_posts:
-                    self.owner_id_list.append(post_id['owner_id'])
-                    self.id_list.append(post_id['id'])
-                    # print(f"{count} - {post_id}")
-                offset += int(len(checking_posts))
-                break
+            except vk.exceptions:
+                continue
+            except Exception:
+                continue
+            break
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -76,31 +92,46 @@ class SearchForActive:
             """Усыпляем каждый раз потому что того требует VkAPI."""
 
             offset_likes = 0
-            # count = 1
+            count = 1
             while True:
                 time.sleep(random.uniform(0.4, 0.6))
-                check_list = vk_api.likes.getList(type='post',
-                                                  owner_id=value,
-                                                  item_id=key,
-                                                  extended=0,
-                                                  offset=offset_likes,
-                                                  count=1000)
+                try:
+                    check_list = vk_api.likes.getList(access_token=next(yield_token()),
+                                                      type='post',
+                                                      owner_id=value,
+                                                      item_id=key,
+                                                      extended=0,
+                                                      offset=offset_likes,
+                                                      count=1000)
 
-                checking_item_list = check_list['items']
+                    checking_item_list = check_list['items']
+                    for element in checking_item_list:
+                        self.favorite_users.append(element)
+                        print(f'{count}---{element}')
+                        count += 1
 
-                for element in checking_item_list:
-                    self.favorite_users.append(element)
-                    # print(f'{count}---{element}')
-                    # count += 1
+                except Exception as err:
+                    print(f'OOPS!!!_____{err}')
+                    # logging.basicConfig(
+                    #     level=logging.DEBUG,
+                    #     filename="mylog.log",
+                    #     filemode="w",
+                    #     format="%(asctime)s - %(module)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
+                    #     datefmt='%H:%M:%S',
+                    # )
+                    # logging.info('Hello')
+                    break
+
                 offset_likes += len(checking_item_list)
                 if len(checking_item_list) == 0:
                     break
+                break
 
         for element in self.favorite_users:
             self.favorite_users_dict[element] = self.favorite_users_dict.get(element,
                                                                              0) + 1  # Добавляем колличество раз встречаемых ID.
 
-        self.final_dict = dict(Counter(self.favorite_users_dict).most_common(50))  # Выводим 50 активных пользователей.
+        self.final_dict = dict(Counter(self.favorite_users_dict).most_common(60))  # Выводим ТОП активных пользователей.
 
         return self.final_dict
 
@@ -157,4 +188,4 @@ def main(some, offset):
 
 
 if __name__ == '__main__':
-    print(main())
+    print(main('cybersportby', 100))

@@ -1,4 +1,6 @@
 import telebot
+import vk
+from vk import exceptions
 import config
 from telebot import types, TeleBot
 import random
@@ -7,12 +9,12 @@ import os
 import time
 from check_active import main
 from textblob import TextBlob
-from translate import Translator
-# from SQLite_script import SQLight
+from googletrans import Translator
+# from Mydb import Table
 import asyncio
 
 bot: TeleBot = telebot.TeleBot(config.Token)
-# db = SQLight('DB_Telegram_followers.db')
+# db = Table()
 
 stick = {'hi': 'CAACAgIAAxkBAAEEh6diYacMLoyQdAIwEcTu9spC_IzwVAACKgAD78MbMnp5qWur76SZJAQ',
          'think': 'CAACAgIAAxkBAAEErsJieD7Oax4LPgsOg-DPmpsg7xXnEwACIhMAAl1scEuuLYe9O-OAPiQE',
@@ -38,13 +40,16 @@ def start_bot(message):
                      "Меня зовут - {0.first_name}!".format(bot.get_me()),
                      reply_markup=keyboard)
 
+
 """Со временем реализую подписку на Бота."""
+
+
 # async def subscribe(message: types.Message):
-#     if not db.sub_exists(message.from_user.id):
-#         print(db.sub_exists(message.from_user.id))
-#         db.add_subs(message.from_user.id)
+#     if not db.subscriber_exist(message.from_user.id):
+#         print(db.subscriber_exist(message.from_user.id))
+#         db.add_subscriber(message.from_user.id)
 #     else:
-#         db.update_subs(message.from_user.id, True)
+#         db.update_subscription(message.from_user.id, subscription_status=True)
 #     bot.send_message(message.chat.id, "Вы успешно подписались на меня.")
 #
 #
@@ -54,11 +59,11 @@ def start_bot(message):
 #
 #
 # async def unsubscribe(message: types.Message):
-#     if not db.sub_exists(message.from_user.id):
-#         db.add_subs(user_id=message.from_user.id, status=False)
+#     if not db.subscriber_exist(message.from_user.id):
+#         db.add_subscriber(user_id=message.from_user.id, subscription_status=False)
 #         bot.send_message(message.chat.id, "Вы итак не подписались на меня.(((")
 #     else:
-#         db.update_subs(message.from_user.id, False)
+#         db.update_subscription(message.from_user.id, subscription_status=False)
 #         bot.send_message(message.chat.id, "Как жаль, что Вы отписались от меня.(((")
 #
 #
@@ -67,10 +72,11 @@ def start_bot(message):
 #     asyncio.run(unsubscribe(message))
 #
 
+
 @bot.message_handler(
-    regexp='^(Как дела[?]{1})?(как [а-я]{0,4})?(дела[?]{0,1})?$')
+    regexp='^(Кк[?]ак дела[?]{1})?(как [а-я]{0,4})?(дела[?]{0,1})?$')
 def answer_to_question(message):
-    """Примитивный диалог, в скором времени буду стараться лучше ))))"""
+    """Примитивный диалог, в скором времени буду стараться лучше:-)"""
     answer = bot.send_message(message.chat.id, "Я отлично, сам ты как???")
     bot.register_next_step_handler(answer, answer_q)
 
@@ -84,21 +90,21 @@ def dialog(message):
         case 'pars':
             match message.from_user.id in config.list_id:
                 case True:
-                    inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
+                    inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
 
-                    button_go = types.InlineKeyboardButton('Старт', callback_data='start')
+                    button_go = types.InlineKeyboardButton('Пост', callback_data='start')
                     button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
-                    button_active_users = types.InlineKeyboardButton('Активные пользователи',
+                    button_active_users = types.InlineKeyboardButton('Группа',
                                                                      callback_data='Active users')
 
-                    inline_keyboard.add(button_go, button_stop)
-                    inline_keyboard.add(button_active_users)
+                    inline_keyboard.add(button_go, button_active_users)
+                    inline_keyboard.add(button_stop)
 
                     bot.send_message(message.chat.id, "Подготовь ссылку на пост...\n"
-                                                      "(Чтобы начать нажми ⏩⏩ 'Старт')\n"
+                                                      "(Чтобы начать нажми ⏩⏩ 'По посту')\n"
                                                       "(Для отмены нажми ⏩⏩ 'Стоп')\n"
                                                       "Чтобы получить ТОП-50 активных юзеров по группе юзай: "
-                                                      "'Активные пользователи'", reply_markup=inline_keyboard)
+                                                      "'Группа'", reply_markup=inline_keyboard)
                 case False:
                     bot.send_message(message.chat.id,
                                      f'Прошу прощения, {message.from_user.first_name}, эта функция еще тестируется.\n'
@@ -109,23 +115,31 @@ def answer_q(message):
     """Этот метод нужен для определения эмоции пользователя.
     Переводим для библиотеки с русского на английский, после чего определяем настроение."""
     try:
-        translator = Translator(to_lang="English", from_lang='Russian')
-        translation = translator.translate(message.text)
+        msg = message.text
+        translator = Translator()
+        translation = translator.translate(msg, src='ru', dest='en')
 
-        analysis_polarity = TextBlob(translation).polarity
+        analysis_polarity = TextBlob(translation.text).polarity
 
         if analysis_polarity == 1:
             bot.send_message(message.chat.id, "Ого, я очень рад за тебя, {0.first_name}! :-)".format(message.from_user))
-        elif 1 > analysis_polarity > 0.5:
+
+        elif 1 > analysis_polarity >= 0.8:
             bot.send_message(message.chat.id,
-                             "Это не отлично, но тем не менее жить с этим можно, {0.first_name}. "
+                             "Это не ПРЕВОСХОДНО, но тем не менее жить с этим можно, {0.first_name}. "
+                             "Не отчаивайся!".format(message.from_user))
+
+        elif 0.8 > analysis_polarity >= 0:
+            bot.send_message(message.chat.id,
+                             "Это уже что то среднее, правда, {0.first_name}? "
                              "Не отчаивайся!".format(message.from_user))
 
         else:
             bot.send_message(message.chat.id,
                              "В скором времени все наладится, я в это верю и ты, {0.first_name}, "
                              "верь вместе со мной.".format(message.from_user))
-    except Exception:
+    except Exception as err:
+        print(err)
         bot.send_message(message.chat.id, "Я не совсем понял, что ты имеешь ввиду, но хочу верить, что все хорошо.")
 
 
@@ -143,17 +157,29 @@ def inline_():
     return inline_keyboard
 
 
-@bot.message_handler(content_types=['document', 'text'])
-def parsing(message):
+def inline_2():
     inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
 
-    button_go = types.InlineKeyboardButton('Старт', callback_data='start')
+    button_go = types.InlineKeyboardButton('Пост', callback_data='start')
     button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
-    button_active_users = types.InlineKeyboardButton('Активные пользователи', callback_data='Active users')
+    button_active_users = types.InlineKeyboardButton('Группа', callback_data='Active users')
 
     inline_keyboard.add(button_go, button_stop)
     inline_keyboard.add(button_active_users)
+    return inline_keyboard
 
+
+def inline_3():
+    inline_keyboard = types.InlineKeyboardMarkup(row_width=3)
+
+    button_stop = types.InlineKeyboardButton('Стоп', callback_data='stop')
+
+    inline_keyboard.add(button_stop)
+    return inline_keyboard
+
+
+@bot.message_handler(content_types=['document', 'text'])
+def parsing(message):
     try:
         chat_post_parser = ParsVk(message.text)
         chat_post_parser.show_file()
@@ -164,7 +190,7 @@ def parsing(message):
         file = open(r'All_open_acc.html', 'rb')
         bot.send_document(message.chat.id, file)
         file.close()
-        bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_keyboard)
+        bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_2())
         os.remove('All_open_acc.html')
     except Exception as error:
         bot.send_message(message.chat.id,
@@ -173,33 +199,58 @@ def parsing(message):
 
 
 def offset_100(message):
-    bot.send_message(message.chat.id, f'{main(message.text, 100)}')
-    offset_function(message)
+    try:
+        bot.send_message(message.chat.id, f'{main(message.text, 100)}')
+        asyncio.run(offset_function(message))
+    except vk.exceptions.VkAPIError as err:
+        print(err)
+        mess_from_user_time = bot.send_message(message.chat.id,
+                                               'Произошла ошибка, проверь правильность введенных данных.',
+                                               reply_markup=inline_())
+        bot.register_next_step_handler(message=mess_from_user_time,
+                                       callback=dialog)
 
 
 def offset_500(message):
-    bot.send_message(message.chat.id, f'{main(message.text, 500)}')
-    offset_function(message)
+    try:
+        bot.send_message(message.chat.id, f'{main(message.text, 500)}')
+        asyncio.run(offset_function(message))
+    except vk.exceptions.VkAPIError as err:
+        print(err)
+        mess_from_user_time = bot.send_message(message.chat.id,
+                                               'Произошла ошибка, проверь правильность введенных данных.',
+                                               reply_markup=inline_())
+
+        bot.register_next_step_handler(message=mess_from_user_time,
+                                       callback=dialog)
 
 
 def offset_all(message):
-    bot.send_message(message.chat.id, f'{main(message.text, 0)}')
-    offset_function(message)
+    try:
+        bot.send_message(message.chat.id, f'{main(message.text, 0)}')
+        asyncio.run(offset_function(message))
+    except vk.exceptions.VkAPIError as err:
+        print(err)
+        mess_from_user_time = bot.send_message(message.chat.id,
+                                               'Произошла ошибка, проверь правильность введенных данных.',
+                                               reply_markup=inline_())
+
+        bot.register_next_step_handler(message=mess_from_user_time,
+                                       callback=dialog)
 
 
 @bot.message_handler(content_types=['document', 'text'])
-def offset_function(message):
+async def offset_function(message):
     try:
         bot.send_message(message.chat.id,
                          f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
 
-        time.sleep(random.randint(2, 5))
+        await asyncio.sleep(random.randint(2, 5))
         active_users_file = open(r'Active_users.html', 'rb')
         bot.send_document(message.chat.id, active_users_file)
         active_users_file.close()
-        bot.send_message(message.chat.id, f'Вот, что получилось! :-)')
-        bot.send_message(message.chat.id, 'Для отмены нажми ⏩⏩ \'Стоп\'\n'
-                                          'Для того чтобы продолжить - кидай следующий...', reply_markup=inline_())
+        mess = bot.send_message(message.chat.id, f'Продолжим...', reply_markup=inline_())
+        bot.register_next_step_handler(mess, callback=dialog)
         os.remove('Active_users.html')
     except Exception as error:
         bot.send_message(message.chat.id,
@@ -213,34 +264,47 @@ def callback_inline(call):
     try:
         match call.data:
             case 'stop':
-                mess_from_user_stop = bot.edit_message_text(call.inline_message_id, 'Стоп, так стоп!')
+                mess_from_user_stop = bot.send_message(call.message.chat.id, 'Стоп, так стоп!', reply_markup=None)
                 bot.register_next_step_handler(message=mess_from_user_stop, callback=dialog)
             case 'start':
-                mess_from_user_start = bot.send_message(call.message.chat.id, 'Давай ссылку на пост!')
+                mess_from_user_start = bot.edit_message_text(chat_id=call.message.chat.id,
+                                                             message_id=call.message.message_id,
+                                                             text='Давай ссылку на пост!', reply_markup=inline_2())
+
+                # mess_from_user_start = bot.send_message(call.message.chat.id, 'Давай ссылку на пост!')
                 bot.register_next_step_handler(message=mess_from_user_start, callback=parsing)
             case 'Active users':
-                bot.send_message(call.message.chat.id,
-                                 'Введи ID группы. \n'
-                                 '(пример:\'cybersportby\' или \'78017410\')',
-                                 reply_markup=inline_())
+                bot.edit_message_text(chat_id=call.message.chat.id,
+                                      message_id=call.message.message_id,
+                                      text='Введи ID группы. \n'
+                                           '(пример:\'cybersportby\' или \'78017410\')', reply_markup=inline_())
 
             case 'button_100':
-                mess_from_user_time = bot.send_message(call.message.chat.id,
-                                                       'Примерное время ожидания 3 минуты!')
+                mess_from_user_time = bot.edit_message_text(chat_id=call.message.chat.id,
+                                                            message_id=call.message.message_id,
+                                                            text='Примерное время ожидания 3 минуты!',
+                                                            reply_markup=inline_3())
+
                 bot.register_next_step_handler(message=mess_from_user_time,
                                                callback=offset_100)
 
             case 'button_500':
-                mess_from_user_time = bot.send_message(call.message.chat.id,
-                                                       'Примерное время ожидания 6 минут!')
+                mess_from_user_time = bot.edit_message_text(chat_id=call.message.chat.id,
+                                                            message_id=call.message.message_id,
+                                                            text='Примерное время ожидания 6 минут!',
+                                                            reply_markup=inline_3())
+
                 bot.register_next_step_handler(message=mess_from_user_time,
                                                callback=offset_500)
 
             case 'all':
-                mess_from_user_time = bot.send_message(call.message.chat.id,
-                                                       'Примерное время ожидания \'ОЧЕНЬ МНОГО\' '
-                                                       'минут!(зависит от количества постов'
-                                                       'в группе)')
+                mess_from_user_time = bot.edit_message_text(chat_id=call.message.chat.id,
+                                                            message_id=call.message.message_id,
+                                                            text='Примерное время ожидания \'ОЧЕНЬ МНОГО\''
+                                                                 'минут!(зависит от количества постов'
+                                                                 'в группе)',
+                                                            reply_markup=inline_3())
+
                 bot.register_next_step_handler(message=mess_from_user_time,
                                                callback=offset_all)
 
@@ -253,5 +317,5 @@ if __name__ == '__main__':
     try:
         bot.infinity_polling(non_stop=True, interval=1)
     except Exception as e:
-        print(e)
-        bot.infinity_polling(non_stop=True, interval=2)
+        print(f'In infinity_polling ====> {e}')
+        bot.infinity_polling(non_stop=True, interval=1)
