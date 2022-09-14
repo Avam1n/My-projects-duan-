@@ -4,6 +4,7 @@ from vk import exceptions
 from config import Token_VK_not_my, Token_VK, Token_VK_Jeki
 from collections import Counter
 import random
+
 # import logging
 
 session = vk.Session(Token_VK_not_my)
@@ -13,7 +14,7 @@ start_time = time.time()
 
 
 class SearchForActive:
-    token = {1: vk.Session(Token_VK), 2: vk.Session(Token_VK_Jeki), 3: vk.Session(Token_VK_not_my)}
+    token = {1: Token_VK, 2: Token_VK_Jeki, 3: Token_VK_not_my}
     group_id = ''
     dict_posts = {}
     owner_id_list = []
@@ -52,9 +53,11 @@ class SearchForActive:
             while True:
                 yield from [token for key_token, token in self.token.items()]
 
+        access_token = yield_token()
+
         while True:
             try:
-                checking_posts = vk_api.wall.get(access_token=next(yield_token()),
+                checking_posts = vk_api.wall.get(access_token=next(access_token),
                                                  owner_id=SearchForActive.check_group(self),
                                                  offset=offset,
                                                  count=100,
@@ -96,20 +99,18 @@ class SearchForActive:
             while True:
                 time.sleep(random.uniform(0.4, 0.6))
                 try:
-                    check_list = vk_api.likes.getList(access_token=next(yield_token()),
+                    check_list = vk_api.likes.getList(access_token=next(access_token),
                                                       type='post',
                                                       owner_id=value,
                                                       item_id=key,
                                                       extended=0,
                                                       offset=offset_likes,
-                                                      count=1000)
+                                                      count=1000)['items']
 
-                    checking_item_list = check_list['items']
-                    for element in checking_item_list:
+                    for element in check_list:
                         self.favorite_users.append(element)
                         print(f'{count}---{element}')
                         count += 1
-
                 except Exception as err:
                     print(f'OOPS!!!_____{err}')
                     # logging.basicConfig(
@@ -122,8 +123,9 @@ class SearchForActive:
                     # logging.info('Hello')
                     break
 
-                offset_likes += len(checking_item_list)
-                if len(checking_item_list) == 0:
+                offset_likes += len(check_list)
+
+                if len(check_list) == 0:
                     break
                 break
 
