@@ -70,7 +70,7 @@ class SearchForActive:
                         print(f"{count} - {post_id}")
                         count += 1
                     offset += int(len(checking_posts))
-                    if get_offset == offset:
+                    if offset == get_offset:
                         break
 
                 elif len(checking_posts) != 100:
@@ -80,13 +80,10 @@ class SearchForActive:
                         print(f"{count} - {post_id}")
                         count += 1
                     offset += int(len(checking_posts))
-                    break
-
             except vk.exceptions:
-                continue
+                break
             except Exception:
-                continue
-            break
+                break
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -97,7 +94,6 @@ class SearchForActive:
             offset_likes = 0
             count = 1
             while True:
-                time.sleep(random.uniform(0.4, 0.6))
                 try:
                     check_list = vk_api.likes.getList(access_token=next(access_token),
                                                       type='post',
@@ -107,10 +103,15 @@ class SearchForActive:
                                                       offset=offset_likes,
                                                       count=1000)['items']
 
+                    time.sleep(random.uniform(0.4, 0.6))
+
                     for element in check_list:
                         self.favorite_users.append(element)
                         print(f'{count}---{element}')
                         count += 1
+                    offset_likes += len(check_list)
+                    if len(check_list) == 0:
+                        break
                 except Exception as err:
                     print(f'OOPS!!!_____{err}')
                     # logging.basicConfig(
@@ -122,12 +123,8 @@ class SearchForActive:
                     # )
                     # logging.info('Hello')
                     break
-
-                offset_likes += len(check_list)
-
-                if len(check_list) == 0:
-                    break
                 break
+
 
         for element in self.favorite_users:
             self.favorite_users_dict[element] = self.favorite_users_dict.get(element,
