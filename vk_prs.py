@@ -1,6 +1,7 @@
 import re
 import time
 import vk
+import logging
 from config import Token_VK_not_my
 
 session = vk.Session(Token_VK_not_my)
@@ -48,8 +49,8 @@ class ParsVk:
 
             return self.list_users_copy
         except Exception as err:
-            print(f'{err}-- req_url')
-            return f'Oops!\nЧто-то пошло не так... в парсе.'
+            logging.error(f'{err}')
+            return f'Oops!\nЧто-то случилось с парсингом!'
 
     def show_file(self):  # Реализуем показ нужной нам информации.
         try:
@@ -69,8 +70,8 @@ class ParsVk:
                     count += 1
             return file
         except Exception as err:
-            print(err)
-            return f'Oops!\nЧто-то пошло не так... в отображении.'
+            logging.error(f'{err}')
+            return f'Oops!\nЧто-то пошло не так с созданием файла.'
 
 
 if __name__ == '__main__':

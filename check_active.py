@@ -1,11 +1,9 @@
+import logging
 import time
 import vk
-from vk import exceptions
 from config import Token_VK_not_my, Token_VK, Token_VK_Jeki
 from collections import Counter
 import random
-
-# import logging
 
 session = vk.Session(Token_VK_not_my)
 vk_api = vk.API(session, v="5.131")
@@ -39,7 +37,9 @@ class SearchForActive:
                     group_id = get_group_id.get('id')
                     return f'-{group_id}'
         except Exception as err:
-            return f'Что-то пошло не так, описание ошибки ---> {err}'
+            logging.error(f'{err}')
+            return f'Что-то пошло не так, ошибка ввода ID группы!\n' \
+                   f'(пример: ввод -->\'cybersportby\', или\'-78017410\')'
 
     def check_posts(self, get_offset: int) -> dict:
         """Данный метод нужен для того, чтобы перебрать и взять нужную информацию по ВСЕМ постам группы, и определяем
@@ -67,8 +67,8 @@ class SearchForActive:
                     for post_id in checking_posts:
                         self.owner_id_list.append(post_id['owner_id'])
                         self.id_list.append(post_id['id'])
-                        print(f"{count} - {post_id}")
-                        count += 1
+                        # print(f"{count} - {post_id}")
+                        # count += 1
                     offset += int(len(checking_posts))
                     if offset == get_offset:
                         break
@@ -77,13 +77,12 @@ class SearchForActive:
                     for post_id in checking_posts:
                         self.owner_id_list.append(post_id['owner_id'])
                         self.id_list.append(post_id['id'])
-                        print(f"{count} - {post_id}")
-                        count += 1
+                        # print(f"{count} - {post_id}")
+                        # count += 1
                     offset += int(len(checking_posts))
-            except vk.exceptions:
-                break
-            except Exception:
-                break
+            except Exception as err:
+                logging.error(f'{err}')
+                return f"Выполнение остановлено!\nОшибка с перебором постов!"
 
         self.dict_posts = dict(
             zip(self.id_list, self.owner_id_list))  # Записываем ID в словарь для дальнейшей работы с ним.
@@ -92,7 +91,7 @@ class SearchForActive:
             """Усыпляем каждый раз потому что того требует VkAPI."""
 
             offset_likes = 0
-            count = 1
+            # count = 1
             while True:
                 try:
                     check_list = vk_api.likes.getList(access_token=next(access_token),
@@ -104,27 +103,17 @@ class SearchForActive:
                                                       count=1000)['items']
 
                     time.sleep(random.uniform(0.4, 0.6))
-
                     for element in check_list:
                         self.favorite_users.append(element)
-                        print(f'{count}---{element}')
-                        count += 1
+                        # print(f'{count}---{element}')
+                        # count += 1
                     offset_likes += len(check_list)
                     if len(check_list) == 0:
                         break
                 except Exception as err:
-                    print(f'OOPS!!!_____{err}')
-                    # logging.basicConfig(
-                    #     level=logging.DEBUG,
-                    #     filename="mylog.log",
-                    #     filemode="w",
-                    #     format="%(asctime)s - %(module)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
-                    #     datefmt='%H:%M:%S',
-                    # )
-                    # logging.info('Hello')
-                    break
+                    logging.error(f'{err}')
+                    return f"Выполнение остановлено!\nОшибка с перебором лайков!"
                 break
-
 
         for element in self.favorite_users:
             self.favorite_users_dict[element] = self.favorite_users_dict.get(element,
@@ -149,8 +138,8 @@ class SearchForActive:
                         item.update(a)
             return list_active_users
         except Exception as err:
-            print(f'{err}-- open_account_check')
-            return f'Oops!\nЧто-то пошло не так... в создании списка.'
+            logging.error(f'{err}')
+            return f'Выполнение остановлено!\nЧто-то пошло не так в создании списка открытых аккаунтов.'
 
     def show_file(self):  # Реализуем показ нужной нам информации.
         try:
@@ -171,20 +160,21 @@ class SearchForActive:
                     count += 1
             return file
         except Exception as err:
-            if file is None:
-                return f'Oops!\nЧто-то пошло не так... в отображении.'
-            else:
-                print(err)
-                return f'Oops!\nЧто-то пошло не так... в отображении.'
+            logging.error(f'{err}')
 
 
 def main(some, offset):
-    start_search = SearchForActive(some)
-    start_search.check_posts(offset)
-    start_search.open_account_check()
-    start_search.show_file()
-    return f'{"Выполнено за --- %.0f --- секунд(ы)! :)" % (time.time() - start_time)}'
+    try:
+        logging.info(f'Active_users - started!')
+
+        start_search = SearchForActive(some)
+        start_search.check_posts(offset)
+        start_search.open_account_check()
+        start_search.show_file()
+        return "Сейчас подготовлю результат..."
+    except Exception as error:
+        logging.error(f'{error}')
 
 
 if __name__ == '__main__':
-    print(main('cybersportby', 100))
+    print(main())
