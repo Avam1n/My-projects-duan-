@@ -190,11 +190,11 @@ def parsing(message):
         bot.send_message(message.chat.id,
                          f'Сейчас попробую скинуть открытые аккаунты в HTML файле:')
         time.sleep(random.randint(2, 5))
-        file = open(r'All_open_acc.html', 'rb')
+        file = open(f'{message.text}.html', 'rb')
         bot.send_document(message.chat.id, file)
         file.close()
         bot.send_message(message.chat.id, f'Вот, что получилось! :-)', reply_markup=inline_2())
-        os.remove('All_open_acc.html')
+        os.remove(f'{message.text}.html')
     except Exception as error:
         logging.error(f'{error}')
         send_emile.main(message.text)
@@ -257,12 +257,12 @@ async def offset_function(message):
     try:
         send_emile.main(message.text)
         await asyncio.sleep(random.randint(2, 5))
-        active_users_file = open(r'Active_users.html', 'rb')
+        active_users_file = open(f'{message.text}.html', 'rb')
         bot.send_document(message.chat.id, active_users_file)
         active_users_file.close()
         mess = bot.send_message(message.chat.id, f'Продолжим...', reply_markup=inline_())
         bot.register_next_step_handler(mess, callback=dialog)
-        os.remove('Active_users.html')
+        os.remove(f'{message.text}.html')
     except Exception as error:
         logging.error(f'{error}')
         send_emile.main(message.text)

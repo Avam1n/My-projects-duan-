@@ -47,7 +47,6 @@ class SearchForActive:
         Время выполнения зависит от объема данных(в среднем 5 минут!)"""
 
         offset = 0
-        count = 1
 
         def yield_token():
             while True:
@@ -62,13 +61,12 @@ class SearchForActive:
                                                  offset=offset,
                                                  count=100,
                                                  filter='all')['items']
+                time.sleep(random.uniform(0.4, 0.6))
 
                 if len(checking_posts) == 100:
                     for post_id in checking_posts:
                         self.owner_id_list.append(post_id['owner_id'])
                         self.id_list.append(post_id['id'])
-                        # print(f"{count} - {post_id}")
-                        # count += 1
                     offset += int(len(checking_posts))
                     if offset == get_offset:
                         break
@@ -77,8 +75,6 @@ class SearchForActive:
                     for post_id in checking_posts:
                         self.owner_id_list.append(post_id['owner_id'])
                         self.id_list.append(post_id['id'])
-                        # print(f"{count} - {post_id}")
-                        # count += 1
                     offset += int(len(checking_posts))
             except Exception as err:
                 logging.error(f'{err}')
@@ -91,7 +87,6 @@ class SearchForActive:
             """Усыпляем каждый раз потому что того требует VkAPI."""
 
             offset_likes = 0
-            # count = 1
             while True:
                 try:
                     check_list = vk_api.likes.getList(access_token=next(access_token),
@@ -105,8 +100,6 @@ class SearchForActive:
                     time.sleep(random.uniform(0.4, 0.6))
                     for element in check_list:
                         self.favorite_users.append(element)
-                        # print(f'{count}---{element}')
-                        # count += 1
                     offset_likes += len(check_list)
                     if len(check_list) == 0:
                         break
@@ -144,7 +137,7 @@ class SearchForActive:
     def show_file(self):  # Реализуем показ нужной нам информации.
         try:
             list_users = SearchForActive.open_account_check(self)
-            with open(r'Active_users.html', 'w', encoding='UTF-8') as file:
+            with open(f'{self.group_id}.html', 'w', encoding='UTF-8') as file:
                 count = 1
                 for element in list_users:
                     element_with_city_item = element.get('city', f'{"-------"}')
